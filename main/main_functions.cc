@@ -97,13 +97,6 @@ void setup() {
   micro_op_resolver.AddSoftmax();
   micro_op_resolver.AddDequantize();
 
-
-
-  
-
-
-
-
   // Build an interpreter to run the model with.
   // NOLINTNEXTLINE(runtime-global-variables)
   static tflite::MicroInterpreter static_interpreter(
@@ -146,14 +139,16 @@ void loop() {
   TfLiteTensor* output = interpreter->output(0);
   int8_t none_score = output->data.uint8[0];
   int8_t paper_score = output->data.uint8[1];
-  int8_t rock_score = output->data.uint8[2];
-  int8_t scissors_score = output->data.uint8[3];
+  // int8_t rock_score = output->data.uint8[2];
+  // int8_t scissors_score = output->data.uint8[3];
 
   float none_score_f = (none_score - output->params.zero_point) * output->params.scale;
   float paper_score_f = (paper_score - output->params.zero_point) * output->params.scale;
-  float rock_score_f = (rock_score - output->params.zero_point) * output->params.scale;
-  float scissors_score_f = (scissors_score - output->params.zero_point) * output->params.scale;
-  MicroPrintf("none score:%f, paper score %f, rock score %f, scissors score %f",none_score_f, paper_score_f, rock_score_f, scissors_score_f);
+  // float rock_score_f = (rock_score - output->params.zero_point) * output->params.scale;
+  // float scissors_score_f = (scissors_score - output->params.zero_point) * output->params.scale;
+  // MicroPrintf("none score:%f, paper score %f, rock score %f, scissors score %f",none_score_f, paper_score_f, rock_score_f, scissors_score_f);
+  MicroPrintf("left score:%f, person score %f",none_score_f, paper_score_f);
+
 
   // Respond to detection
   // RespondToDetection(person_score_f, no_person_score_f);

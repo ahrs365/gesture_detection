@@ -24,4 +24,7 @@ idf_component_register(
                 "sample_images/image15"
                 "sample_images/image16"
                 "sample_images/image17"
-                "sample_images/image18")
+                "sample_images/image18"
+                "sample_images/image19"
+                "sample_images/image20"
+                "sample_images/image21")
