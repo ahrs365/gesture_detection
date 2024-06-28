@@ -39,9 +39,10 @@ limitations under the License.
 void *image_provider_get_display_buf();
 
 TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* image_data);
-
 TfLiteStatus InitCamera();
-
+TfLiteStatus ProcessImage(int image_width, int image_height,int8_t* image_data);
+// Map function to map a number from one range to another
+int map(int x, int in_min, int in_max, int out_min, int out_max);
 #endif /* CONFIG_PERSON_DETECTION_STATIC */
 
 #endif  // TENSORFLOW_LITE_MICRO_EXAMPLES_PERSON_DETECTION_IMAGE_PROVIDER_H_

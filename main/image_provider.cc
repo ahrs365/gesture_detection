@@ -29,6 +29,7 @@ limitations under the License.
 #include "model_settings.h"
 #include "image_provider.h"
 #include "esp_main.h"
+#include <math.h> // for floor function
 
 static const char* TAG = "app_camera";
 
@@ -114,12 +115,12 @@ TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* i
   MicroPrintf("Image Captured\n");
   // We have initialised camera to grayscale
   // Just quantize to int8_t
-  // printf("start capture--------------------------\n");
+  printf("start capture--------------------------\n");
   for (int i = 0; i < image_width * image_height; i++) {
     image_data[i] = ((uint8_t *) fb->buf)[i] ^ 0x80;
-    // printf("%d,",image_data[i]);
+    printf("%d,",image_data[i]);
   }
-  // printf("stop capture--------------------------\n");
+  printf("stop capture--------------------------\n");
 
   // MicroPrintf("\n");
 
@@ -131,4 +132,94 @@ TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* i
 #else
   return kTfLiteError;
 #endif
+}
+
+// Process the captured image
+TfLiteStatus ProcessImage(int image_width, int image_height,int8_t* image_data) {
+  const int imgSize = 96;
+  // 设置捕获图像的宽度和高度
+  int kCaptureWidth = 320;
+  int kCaptureHeight = 240;
+  int capDataLen = kCaptureWidth * kCaptureHeight * 2; // RGB565 每个像素2字节
+  camera_fb_t* fb = esp_camera_fb_get();
+  if (!fb) {
+      ESP_LOGE(TAG, "Camera capture failed");
+      return kTfLiteError;
+  }
+
+  uint8_t* captured_data = fb->buf;
+  // printf("start--------------\n");
+  // Color of the current pixel
+  uint16_t color;
+  for (int y = 0; y < imgSize; y++) {
+    for (int x = 0; x < imgSize; x++) {
+      int currentCapX = floor(map(x, 0, imgSize, 40, kCaptureWidth - 80));
+      int currentCapY = floor(map(y, 0, imgSize, 0, kCaptureHeight));
+      // Read the color of the pixel as 16-bit integer
+      int read_index = (currentCapY * kCaptureWidth + currentCapX) * 2;
+      int i2 = (currentCapY * kCaptureWidth + currentCapX + 1) * 2;
+      int i3 = ((currentCapY + 1) * kCaptureWidth + currentCapX) * 2;
+      int i4 = ((currentCapY + 1) * kCaptureWidth + currentCapX + 1) * 2;
+
+      uint8_t high_byte = captured_data[read_index];
+      uint8_t low_byte = captured_data[read_index + 1];
+
+      color = ((uint16_t)high_byte << 8) | low_byte;
+      // Extract the color values (5 red bits, 6 green, 5 blue)
+      uint8_t r, g, b;
+      r = ((color & 0xF800) >> 11) * 8;
+      g = ((color & 0x07E0) >> 5) * 4;
+      b = ((color & 0x001F) >> 0) * 8;
+      // Convert to grayscale by calculating luminance
+      float gray_value = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+
+      if (i2 > 0 && i2 < capDataLen - 1) {
+          high_byte = captured_data[i2];
+          low_byte = captured_data[i2 + 1];
+          color = ((uint16_t)high_byte << 8) | low_byte;
+          r = ((color & 0xF800) >> 11) * 8;
+          g = ((color & 0x07E0) >> 5) * 4;
+          b = ((color & 0x001F) >> 0) * 8;
+          gray_value += (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+      }
+      if (i3 > 0 && i3 < capDataLen - 1) {
+          high_byte = captured_data[i3];
+          low_byte = captured_data[i3 + 1];
+          color = ((uint16_t)high_byte << 8) | low_byte;
+          r = ((color & 0xF800) >> 11) * 8;
+          g = ((color & 0x07E0) >> 5) * 4;
+          b = ((color & 0x001F) >> 0) * 8;
+          gray_value += (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+      }
+
+      if (i4 > 0 && i4 < capDataLen - 1) {
+          high_byte = captured_data[i4];
+          low_byte = captured_data[i4 + 1];
+          color = ((uint16_t)high_byte << 8) | low_byte;
+          r = ((color & 0xF800) >> 11) * 8;
+          g = ((color & 0x07E0) >> 5) * 4;
+          b = ((color & 0x001F) >> 0) * 8;
+          gray_value += (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+      }
+
+      gray_value = gray_value / 4;
+
+      // Convert to signed 8-bit integer by subtracting 128.
+      gray_value -= 128;
+      // The index of this pixel in our flat output buffer
+      int index = y * image_width + x;
+      image_data[index] = static_cast<int8_t>(gray_value);
+      // printf("%d,", image_data[index]);
+    }
+  }
+  // printf("end--------------\n");
+
+  esp_camera_fb_return(fb);
+  return kTfLiteOk;
+}
+
+
+// Map function to map a number from one range to another
+int map(int x, int in_min, int in_max, int out_min, int out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

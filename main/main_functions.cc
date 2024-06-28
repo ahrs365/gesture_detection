@@ -127,14 +127,22 @@ void setup() {
 // The name of this function is important for Arduino compatibility.
 void loop() {
   // Get image from provider.
-  if (kTfLiteOk != GetImage(kNumCols, kNumRows, kNumChannels, input->data.int8)) {
+  // if (kTfLiteOk != GetImage(kNumCols, kNumRows,kNumChannels, input->data.int8)) {
+  //   MicroPrintf("Image capture failed.");
+  // }
+  long long image_time = esp_timer_get_time();
+  if (kTfLiteOk != ProcessImage(kNumCols, kNumRows, input->data.int8)) {
     MicroPrintf("Image capture failed.");
   }
+  image_time = (esp_timer_get_time() - image_time);
 
+  long long invoke_time = esp_timer_get_time();
   // Run the model on this input and make sure it succeeds.
   if (kTfLiteOk != interpreter->Invoke()) {
     MicroPrintf("Invoke failed.");
   }
+  invoke_time = (esp_timer_get_time() - invoke_time);
+  MicroPrintf("Image time = %lld, Invoke time = %lld\n", image_time / 1000,invoke_time / 1000);
 
   TfLiteTensor* output = interpreter->output(0);
   int8_t none_score = output->data.uint8[0];
@@ -147,7 +155,8 @@ void loop() {
   // float rock_score_f = (rock_score - output->params.zero_point) * output->params.scale;
   // float scissors_score_f = (scissors_score - output->params.zero_point) * output->params.scale;
   // MicroPrintf("none score:%f, paper score %f, rock score %f, scissors score %f",none_score_f, paper_score_f, rock_score_f, scissors_score_f);
-  MicroPrintf("left score:%f, person score %f",none_score_f, paper_score_f);
+  // MicroPrintf("none score:%f, tou score %f",none_score_f, paper_score_f);
+  ESP_LOGE("Classify: ", "none score:%f, tou score %f",none_score_f, paper_score_f);
 
 
   // Respond to detection
