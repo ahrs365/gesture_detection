@@ -82,20 +82,30 @@ void setup() {
   //
   // tflite::AllOpsResolver resolver;
   // NOLINTNEXTLINE(runtime-global-variables)
-  static tflite::MicroMutableOpResolver<7> micro_op_resolver;
+  static tflite::MicroMutableOpResolver<6> micro_op_resolver;
   // micro_op_resolver.AddAveragePool2D();
   // micro_op_resolver.AddConv2D();
   // micro_op_resolver.AddDepthwiseConv2D();
   // micro_op_resolver.AddReshape();
   // micro_op_resolver.AddSoftmax();
 
-  micro_op_resolver.AddQuantize();
+  // micro_op_resolver.AddQuantize();
+  // micro_op_resolver.AddConv2D();
+  // micro_op_resolver.AddMaxPool2D();
+  // micro_op_resolver.AddReshape();
+  // micro_op_resolver.AddFullyConnected();
+  // micro_op_resolver.AddSoftmax();
+  // micro_op_resolver.AddDequantize();
+
   micro_op_resolver.AddConv2D();
-  micro_op_resolver.AddMaxPool2D();
-  micro_op_resolver.AddReshape();
+  micro_op_resolver.AddDepthwiseConv2D();
+  micro_op_resolver.AddPad();
+  micro_op_resolver.AddMean();
   micro_op_resolver.AddFullyConnected();
   micro_op_resolver.AddSoftmax();
-  micro_op_resolver.AddDequantize();
+
+
+
 
   // Build an interpreter to run the model with.
   // NOLINTNEXTLINE(runtime-global-variables)
@@ -131,7 +141,7 @@ void loop() {
   //   MicroPrintf("Image capture failed.");
   // }
   long long image_time = esp_timer_get_time();
-  if (kTfLiteOk != ProcessImage(kNumCols, kNumRows, input->data.int8)) {
+  if (kTfLiteOk != GetImage(kNumCols, kNumRows,kNumChannels, input->data.int8)) {
     MicroPrintf("Image capture failed.");
   }
   image_time = (esp_timer_get_time() - image_time);
@@ -216,14 +226,15 @@ void run_inference(void *ptr) {
   TfLiteTensor* output = interpreter->output(0);
   int8_t none_score = output->data.uint8[0];
   int8_t paper_score = output->data.uint8[1];
-  int8_t rock_score = output->data.uint8[2];
-  int8_t scissors_score = output->data.uint8[3];
+  // int8_t rock_score = output->data.uint8[2];
+  // int8_t scissors_score = output->data.uint8[3];
 
   float none_score_f = (none_score - output->params.zero_point) * output->params.scale;
   float paper_score_f = (paper_score - output->params.zero_point) * output->params.scale;
-  float rock_score_f = (rock_score - output->params.zero_point) * output->params.scale;
-  float scissors_score_f = (scissors_score - output->params.zero_point) * output->params.scale;
-  MicroPrintf("none score:%f, paper score %f, rock score %f, scissors score %f",none_score_f, paper_score_f, rock_score_f, scissors_score_f);
+  // float rock_score_f = (rock_score - output->params.zero_point) * output->params.scale;
+  // float scissors_score_f = (scissors_score - output->params.zero_point) * output->params.scale;
+  // MicroPrintf("none score:%f, paper score %f, rock score %f, scissors score %f",none_score_f, paper_score_f, rock_score_f, scissors_score_f);
+  ESP_LOGE("Classify: ", "none score:%f, tou score %f",none_score_f, paper_score_f);
 
 
   // // Process the inference results.

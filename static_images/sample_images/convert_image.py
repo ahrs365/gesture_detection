@@ -70,9 +70,9 @@ if __name__ == "__main__":
     image0_path = (
         "/home/ahrs/workspace/esp/gesture_detection/static_images/sample_images/image0"
     )
-    rgb_image_path = "/home/ahrs/workspace/esp/gesture_detection/static_images/sample_images/output.jpg"
+    rgb_image_path = "/home/ahrs/workspace/esp/gesture_detection/static_images/sample_images/15-output.jpg"
     output_path = (
-        "/home/ahrs/workspace/esp/gesture_detection/static_images/sample_images/image23"
+        "/home/ahrs/workspace/esp/gesture_detection/static_images/sample_images/image15"
     )
 
     # 添加解决字体问题的代码

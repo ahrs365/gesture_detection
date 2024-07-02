@@ -115,12 +115,12 @@ TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* i
   MicroPrintf("Image Captured\n");
   // We have initialised camera to grayscale
   // Just quantize to int8_t
-  printf("start capture--------------------------\n");
+  // printf("start capture--------------------------\n");
   for (int i = 0; i < image_width * image_height; i++) {
     image_data[i] = ((uint8_t *) fb->buf)[i] ^ 0x80;
-    printf("%d,",image_data[i]);
+    // printf("%d,",image_data[i]);
   }
-  printf("stop capture--------------------------\n");
+  // printf("stop capture--------------------------\n");
 
   // MicroPrintf("\n");
 
